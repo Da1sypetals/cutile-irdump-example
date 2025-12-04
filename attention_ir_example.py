@@ -29,16 +29,24 @@ def flash_attention_forward_v2(
     br: ct.Constant,
     bc: ct.Constant,
 ):
+    ib = ct.bid(0)
+    ih = ct.bid(1)
     Tc = k.shape[0] // bc
-    qi = ct.load(q, index=(ct.bid(0), 0), shape=(br, hidden_size))
+    qi = ct.load(q, index=(ib, ih, ct.bid(2), 0), shape=(1, 1, br, hidden_size))
+
+    qi = ct.reshape(qi, (br, hidden_size))
 
     oi = ct.full((br, hidden_size), 0.0, dtype=q.dtype)
     li = ct.full((br, 1), 0.0, dtype=q.dtype)
     mi = ct.full((br, 1), -1e10, dtype=q.dtype)
 
     for j in range(0, Tc):
-        kj = ct.load(k, index=(0, j), shape=(hidden_size, bc), order="F")
-        vj = ct.load(v, index=(j, 0), shape=(bc, hidden_size))
+        # kj = ct.load(k, index=(0, j), shape=(hidden_size, bc), order="F")
+        # vj = ct.load(v, index=(j, 0), shape=(bc, hidden_size))
+        kj = ct.load(k, index=(ib, ih, 0, j), shape=(1, 1, hidden_size, bc), order="F")
+        vj = ct.load(v, index=(ib, ih, j, 0), shape=(1, 1, bc, hidden_size))
+        kj = ct.reshape(kj, (hidden_size, bc))
+        vj = ct.reshape(vj, (bc, hidden_size))
         sij = ct.matmul(qi, kj) / hidden_size**0.5
         mij = ct.max(sij, axis=-1, keepdims=True)
         mi_mij = ct.cat((mi, mij), axis=-1)
@@ -52,7 +60,7 @@ def flash_attention_forward_v2(
         mi = mi_new
 
     oi = oi / li
-    ct.store(out, index=(ct.bid(0), 0), tile=oi)
+    ct.store(out, index=(ib, ih, ct.bid(2), 0), tile=oi)
 
 
 def main():
@@ -70,16 +78,18 @@ def main():
     )
 
     # 定义参数
+    batch_size = 8
+    num_head = 16
     seq_len = 1024
     hidden_size = 64
     Br = 32  # block row size
     Bc = 32  # block col size
 
     # 创建 mock tensors
-    q = dumper.create_mock_tensor((seq_len, hidden_size), dtype="float32")
-    k = dumper.create_mock_tensor((hidden_size, seq_len), dtype="float32")
-    v = dumper.create_mock_tensor((seq_len, hidden_size), dtype="float32")
-    out = dumper.create_mock_tensor((seq_len, hidden_size), dtype="float32")
+    q = dumper.create_mock_tensor((batch_size, num_head, seq_len, hidden_size), dtype="float32")
+    k = dumper.create_mock_tensor((batch_size, num_head, seq_len, hidden_size), dtype="float32")
+    v = dumper.create_mock_tensor((batch_size, num_head, seq_len, hidden_size), dtype="float32")
+    out = dumper.create_mock_tensor((batch_size, num_head, seq_len, hidden_size), dtype="float32")
 
     # 编译并导出 IR
     print("\n正在编译 flash attention kernel...")
