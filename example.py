@@ -6,7 +6,7 @@
 使用方法：
     python example.py
 
-生成的 IR 文件将保存在 ./ir_dump 目录下：
+生成的 IR 文件将保存在 ./ir_artifacts 目录下：
     - softmax.cutileir: CuTile IR (高级 IR)
     - softmax.cutile: Bytecode (序列化的 IR)
     - softmax.cuda_tile.mlir: MLIR (如果 cuda.tile_internal 可用)
@@ -17,8 +17,8 @@ import sys
 import functools
 
 # 设置环境变量以 dump IR
-os.environ["CUDA_TILE_DUMP_TILEIR"] = "./ir_dump"
-os.environ["CUDA_TILE_DUMP_BYTECODE"] = "./ir_dump"
+os.environ["CUDA_TILE_DUMP_TILEIR"] = "./ir_artifacts"
+os.environ["CUDA_TILE_DUMP_BYTECODE"] = "./ir_artifacts"
 
 # 现在可以正常导入 cuda.tile 了（因为我们创建了 mock _cext.py）
 import cuda.tile as ct
@@ -123,14 +123,14 @@ def compile_and_dump_ir():
             bytecode_generator(writer, anonymize_debug_attr=False)
 
         # 保存 bytecode
-        os.makedirs("./ir_dump", exist_ok=True)
-        bytecode_path = "./ir_dump/softmax.cutile"
+        os.makedirs("./ir_artifacts", exist_ok=True)
+        bytecode_path = "./ir_artifacts/softmax.cutile"
         with open(bytecode_path, "wb") as f:
             f.write(bytecode_buf)
         print(f"✓ Bytecode 已保存到: {bytecode_path}", file=sys.stderr)
 
         # 保存 CuTile IR 到文件
-        ir_path = "./ir_dump/softmax.cutileir"
+        ir_path = "./ir_artifacts/softmax.cutileir"
         with open(ir_path, "w") as f:
             f.write(ir_string)
         print(f"✓ CuTile IR 已保存到: {ir_path}", file=sys.stderr)
@@ -145,7 +145,7 @@ def compile_and_dump_ir():
             print("=" * 60, file=sys.stderr)
             print(mlir_text, file=sys.stderr)
 
-            mlir_path = "./ir_dump/softmax.cuda_tile.mlir"
+            mlir_path = "./ir_artifacts/softmax.cuda_tile.mlir"
             with open(mlir_path, "w") as f:
                 f.write(mlir_text)
             print(f"✓ MLIR 已保存到: {mlir_path}", file=sys.stderr)
@@ -154,7 +154,7 @@ def compile_and_dump_ir():
             print("      这是正常的，因为 MLIR 转换需要额外的内部扩展", file=sys.stderr)
 
         print("\n" + "=" * 60, file=sys.stderr)
-        print("✓ 编译成功！IR 已 dump 到 ./ir_dump 目录", file=sys.stderr)
+        print("✓ 编译成功！IR 已 dump 到 ./ir_artifacts 目录", file=sys.stderr)
         print("=" * 60, file=sys.stderr)
 
         return True

@@ -39,7 +39,7 @@ python example.py
 
 ### 输出文件
 
-编译成功后，IR 文件将保存在 `./ir_dump` 目录下：
+编译成功后，IR 文件将保存在 `./ir_artifacts` 目录下：
 
 - `softmax.cutileir`: CuTile IR（高级 IR，人类可读）
 - `softmax.cutile`: Bytecode（序列化的 IR，二进制格式）
@@ -79,8 +79,8 @@ def get_compute_capability():
 在 `example.py` 中修改环境变量：
 
 ```python
-os.environ['CUDA_TILE_DUMP_TILEIR'] = './my_ir_dump'
-os.environ['CUDA_TILE_DUMP_BYTECODE'] = './my_ir_dump'
+os.environ['CUDA_TILE_DUMP_TILEIR'] = './my_ir_artifacts'
+os.environ['CUDA_TILE_DUMP_BYTECODE'] = './my_ir_artifacts'
 ```
 
 ## 编写自己的 Kernel
