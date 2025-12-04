@@ -18,7 +18,6 @@ import cuda.tile as ct
 from ir_dump import CutileIrDump
 
 
-# 定义 flash attention kernel（无 batch 和 multihead）
 @ct.kernel
 def flash_attention_forward_v2(
     q,
