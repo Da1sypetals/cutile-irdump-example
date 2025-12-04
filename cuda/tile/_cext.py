@@ -52,9 +52,9 @@ default_tile_context = TileContext()
 
 def get_compute_capability():
     """Mock get_compute_capability - returns a default value"""
-    # Return SM 8.0 (Ampere) as default
+    # Return Hopper (9.0) as default
     # Users can modify this if needed
-    return (8, 0)
+    return (9, 0)
 
 
 class ArraySpecialization:
